@@ -1,43 +1,52 @@
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { createToken } from "./user.utils";
 import Config from "../../Config";
+import prisma from "../../shared/prism";
+import { User, UserProfile } from "@prisma/client";
+import ApiError from "../../errors/ApiError";
+import httpStatus from "http-status";
 
-const prisma = new PrismaClient();
 
-const registerUser = async (
-  name: string,
-  email: string,
-  password: string,
-  profile: any
-): Promise<any> => {
-  const userExists = await prisma.user.findUnique({
-    where: { email },
+const createUser = async (payload: User, profile: UserProfile) => {
+  const isUserExits = await prisma.user.findUnique({
+    where: {
+      email: payload.email,
+    },
   });
 
-  if (userExists) {
-    throw new Error("User already exists!");
+  if (isUserExits) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "This user is alrady registered"
+    );
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(payload.password, 12);
+  const userData = {
+    name: payload.name,
+    email: payload.email,
+    password: hashedPassword,
+  };
 
-  const user = await prisma.$transaction(async (prisma) => {
-    const newUser = await prisma.user.create({
-      data: { name, email, password: hashedPassword },
-    });
-
-    await prisma.userProfile.create({
-      data: { userId: newUser.id, bio: profile.bio, age: profile.age },
-    });
-
-    return newUser;
+  const result = await prisma.user.create({
+    data: userData,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
 
-  //   const token = generateToken(user.id);
+  await prisma.userProfile.create({
+    data: { userId: result.id, bio: profile.bio, age: profile.age },
+  });
 
-  return { ...user };
+  return result;
 };
+
+
 
 const loginUser = async (email: string, password: string): Promise<any> => {
   const user = await prisma.user.findUnique({
@@ -65,14 +74,13 @@ const loginUser = async (email: string, password: string): Promise<any> => {
     Config.jwt.jwt_secret as string,
     Config.jwt.expires_in as string
   );
-
-  // Omitting password from user data
   const { password: _, ...userData } = user;
 
   return { ...userData, token };
 };
 
+
 export const userServices = {
-  registerUser,
+  createUser,
   loginUser,
 };
