@@ -1,16 +1,17 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status";
-const globalErrorHandler = (
-  err: any,
+
+const globalErrorHandlear = (
+  error: any,
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
     success: false,
-    message: err.message || "something went wrong",
-    errorDetails: err,
+    message: error.message || "something want wrong",
+    error: error,
   });
 };
 
-export default globalErrorHandler;
+export default globalErrorHandlear;
