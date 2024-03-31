@@ -3,11 +3,6 @@
 ## Live URL
 
 
-
-## Overview
-
-Travel Buddy App is a web application designed to help users plan and organize their trips efficiently. Whether you're traveling solo or with friends, Travel Buddy App provides features to manage your trips, find potential travel buddies, and update your user profile seamlessly.
-
 ## Features
 
 - **Trip Management**: Create, view, and manage your trips with ease.
@@ -33,11 +28,6 @@ Travel Buddy App is a web application designed to help users plan and organize t
 - **Register User**: `POST /api/register`
 - **Login User**: `POST /api/login`
 
-## UserProfile Endpoints
-
-- **Get User Profile**: `GET /api/profile`
-- **Update User Profile**: `PUT /api/profile`
-
 ## Trip Endpoints
 
 - **Create Trip**: `POST /api/trips`
@@ -48,6 +38,11 @@ Travel Buddy App is a web application designed to help users plan and organize t
 - **Send Travel Buddy Request**: `POST /api/trip/:tripId/request`
 - **Get Potential Travel Buddies For a Specific Trip**: `GET /api/travel-buddies/:tripId`
 - **Respond to Travel Buddy Request**: `PUT /api/travel-buddies/:buddyId/respond`
+
+## UserProfile Endpoints
+
+- **Get User Profile**: `GET /api/profile`
+- **Update User Profile**: `PUT /api/profile`
 
 ## Getting Started
 
