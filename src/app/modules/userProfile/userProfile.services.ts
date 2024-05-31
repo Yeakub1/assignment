@@ -1,53 +1,46 @@
 import prisma from "../../shared/prism";
-import { TUser } from "./user.interface";
 
-const getUserProfile = async (
-  userId: string | undefined
-): Promise<TUser | null> => {
-  if (!userId) {
-    return null; 
-  }
-
-  const userProfile = await prisma.user.findUnique({
+const GetUserProfileDB = async (email: string) => {
+  const result = await prisma.user.findUniqueOrThrow({
     where: {
-      id: userId,
+      email,
     },
     select: {
       id: true,
       name: true,
       email: true,
+      photo: true,
+      age: true,
+      bio: true,
+      role: true,
       createdAt: true,
       updatedAt: true,
     },
   });
-
-  return userProfile;
+  return result;
 };
 
-const updateUserProfile = async (
-  userId: string,
-  name: string,
-  email: string
-): Promise<TUser | null> => {
-  try {
-    const updatedProfile = await prisma.user.update({
-      where: { id: userId },
-      data: { name, email },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-    return updatedProfile;
-  } catch (error) {
-    return null;
-  }
+const UpdateUserProfileDB = async (email: string, payload: any) => {
+  const result = await prisma.user.update({
+    where: {
+      email: email,
+    },
+    data: payload,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      photo: true,
+      age: true,
+      bio: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  return result;
 };
 
-export const userProfileService = {
-  getUserProfile,
-  updateUserProfile,
+export const UserProfileServices = {
+  GetUserProfileDB,
+  UpdateUserProfileDB,
 };

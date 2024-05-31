@@ -1,30 +1,35 @@
 import express from "express";
-import { tripController } from "./trip.controller";
+import { TripController } from "./trip.controller";
+import { TripValidation } from "./trip.validation";
 import auth from "../../middleWare/auth";
-import validateRequest from "../../middleWare/validateRequest";
-import { tripValidation } from "./trip.validation";
+import { USER_ROLE } from "../Auth/auth.constant";
+import zodValidation from "../../shared/zodValidation";
 
 const router = express.Router();
 
 router.post(
   "/trips",
-  auth(),
-  validateRequest(tripValidation.createTripValidation),
-  tripController.createTrip
+  auth(USER_ROLE.user),
+  zodValidation(TripValidation.TripSchema),
+  TripController.CreateTrip
 );
-router.get("/trips", tripController.getTripsController);
-
-router.post("/trip/:tripId/request", auth(), tripController.sendTripRequest);
-
+router.get("/trips", TripController.GetTrips);
 router.get(
-  "/travel-buddies/:tripId",
-  auth(),
-  tripController.getPotentialTripBuddies
+  "/tripsForAdmin",
+  auth(USER_ROLE.admin),
+  TripController.getAllTripeForAdmin
 );
-
+router.get("/trips/:id", TripController.GetSingleTrips);
 router.put(
-  "/travel-buddies/:buddyId/respond",
-  auth(),
-  tripController.respondToBuddyRequestController
+  "/trips/update/:id",
+  auth(USER_ROLE.admin, USER_ROLE.user),
+  TripController.UpdateTrip
 );
-export const tripRoutes = router;
+router.delete(
+  "/trips/delete/:id",
+  auth(USER_ROLE.admin, USER_ROLE.user),
+  TripController.DeleteTrip
+);
+router.get("/tripsPosted", auth(USER_ROLE.user), TripController.GetPostedTrips);
+
+export const TripsRoutes = router;

@@ -1,19 +1,15 @@
 import express from "express";
-import { userController } from "./user.controller";
-import validateRequest from "../../middleWare/validateRequest";
-import { userValidation } from "./user.validation";
+import auth from "../../middleWare/auth";
+import { USER_ROLE } from "../Auth/auth.constant";
+import { UsersController } from "./user.controller";
 
 const router = express.Router();
 
-router.post(
-  "/register",
-  validateRequest(userValidation.UserSchema),
-  userController.createUser
+router.get(
+  "/",
+  auth(USER_ROLE.admin, USER_ROLE.user),
+  UsersController.GeTAllUsers
 );
-router.post(
-  "/login",
-  validateRequest(userValidation.loginSchema),
-  userController.loginUser
-);
+router.put("/:id", auth(USER_ROLE.admin), UsersController.UpdateUserStatus);
 
-export const userRoutes = router;
+export const UsersRoutes = router;

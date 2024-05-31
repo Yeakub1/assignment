@@ -1,14 +1,16 @@
 import { Request, Response } from "express";
 import catchAsync from "../../shared/catchAsync";
 import Config from "../../Config";
-import prisma from "../../shared/prism";
-import { UserProfileServices } from "./userProfile.services";
-import sendResponse from "../../shared/sendResponse";
 import { jswHelpers } from "../../helpars/jwtHelpers";
+import prisma from "../../shared/prism";
+import { TravelBuddyServices } from "./travelBuddy.servic";
+import sendResponse from "../../shared/sendResponse";
 import httpStatus from "http-status";
 
-const GetUserProfile = catchAsync(async (req: Request, res: Response) => {
+
+const GetTravelBuddies = catchAsync(async (req: Request, res: Response) => {
   const token = req.headers.authorization as string;
+  const tripId = req?.params?.tripId;
 
   if (!token) {
     throw new Error("Unauthorized Access");
@@ -31,17 +33,19 @@ const GetUserProfile = catchAsync(async (req: Request, res: Response) => {
   if (userStatus !== "Activate") {
     throw new Error("Your id is blocked");
   }
-  const result = await UserProfileServices.GetUserProfileDB(email);
+
+  const result = await TravelBuddyServices.GetTravelBuddiesDB(tripId);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "User profile retrieved successfully",
+    message: "Potential travel buddies retrieved successfully",
     data: result,
   });
 });
 
-const UpdateUserProfile = catchAsync(async (req: Request, res: Response) => {
+const UpdateTravelBuddy = catchAsync(async (req: Request, res: Response) => {
   const token = req.headers.authorization as string;
+  const id = req?.params?.buddyId;
 
   if (!token) {
     throw new Error("Unauthorized Access");
@@ -51,6 +55,7 @@ const UpdateUserProfile = catchAsync(async (req: Request, res: Response) => {
     token,
     Config.jwt.jwt_secret as string
   );
+
   const user = await prisma.user.findUnique({
     where: { email: email },
   });
@@ -63,19 +68,17 @@ const UpdateUserProfile = catchAsync(async (req: Request, res: Response) => {
   if (userStatus !== "Activate") {
     throw new Error("Your id is blocked");
   }
-  const result = await UserProfileServices.UpdateUserProfileDB(
-    email,
-    req?.body
-  );
+
+  const result = await TravelBuddyServices.UpdateTravelBuddiesDB(id, req?.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "User profile updated successfully",
+    message: "Travel buddy request responded successfully",
     data: result,
   });
 });
 
-export const UserProfileController = {
-  GetUserProfile,
-  UpdateUserProfile,
+export const TravelBuddyController = {
+  GetTravelBuddies,
+  UpdateTravelBuddy,
 };

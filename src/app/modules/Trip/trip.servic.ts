@@ -1,68 +1,82 @@
-import { Prisma, PrismaClient, TravelBuddyRequest, Trip } from "@prisma/client";
-import { IPaginationOption } from "../../Interface/pagination";
-import { tripSearchAbleFields } from "./trip.constant";
-import { ITripFilterRequest } from "./tripInterface";
 import { paginatinHelpers } from "../../helpars/paginatinHelpers";
+import prisma from "../../shared/prism";
 
-const prisma = new PrismaClient();
-
-const createTrip = async (
-  userId: string,
-  destination: string,
-  startDate: string,
-  endDate: string,
-  budget: number,
-  activities: string[]
-): Promise<Trip> => {
-  const trip = await prisma.trip.create({
-    data: {
-      userId,
-      destination,
-      startDate: new Date(startDate).toISOString(),
-      endDate: new Date(endDate).toISOString(),
-      budget,
-      activities,
+const CreateTripeDB = async (email: string, payload: any) => {
+  const user = await prisma.user.findUniqueOrThrow({
+    where: {
+      email,
     },
   });
 
-  return trip;
+  payload.userId = user?.id;
+  const result = await prisma.trip.create({ data: payload });
+  return result;
 };
 
+const GetTripsDB = async (searchTerm: any, params: any, options: any) => {
+  const { ...filterData } = params;
+  const { page, limit, skip } = paginatinHelpers.calculatePagination(options);
 
-const  getAllTripsFormDB = async (
-  params: ITripFilterRequest,
-  options: IPaginationOption
-) => {
-  const { limit, page, skip } = paginatinHelpers.calculatePagination(options);
-  const { searchTerm, ...filterData } = params;
-  const andCondition: Prisma.TripWhereInput[] = [];
+  console.log(page);
+  let whereConditions: any = { AND: [], status: true };
 
-  if (params.searchTerm) {
-    andCondition.push({
-      OR: tripSearchAbleFields.map((field) => ({
-        [field]: {
-          contains: params.searchTerm,
-          mode: "insensitive",
-        },
-      })),
-    });
+  if (searchTerm) {
+    const orConditions = [];
+    if (typeof searchTerm === "string" && searchTerm.trim().length > 0) {
+      orConditions.push({
+        destination: { contains: searchTerm, mode: "insensitive" },
+      });
+      orConditions.push({
+        startDate: { contains: searchTerm, mode: "insensitive" },
+      });
+      orConditions.push({
+        endDate: { contains: searchTerm, mode: "insensitive" },
+      });
+      orConditions.push({
+        travelType: { contains: searchTerm, mode: "insensitive" },
+      });
+      orConditions.push({
+        description: { contains: searchTerm, mode: "insensitive" },
+      });
+    }
+
+    if (orConditions.length > 0) {
+      whereConditions.AND.push({ OR: orConditions });
+    }
   }
 
-  if (Object.keys(filterData).length > 0) {
-    andCondition.push({
-      AND: Object.keys(filterData).map((key) => ({
-        [key]: {
-          equals: (filterData as any)[key],
-        },
-      })),
-    });
+  if (filterData) {
+    const andConditions = [];
+
+    if (filterData.travelType) {
+      andConditions.push({
+        travelType: { equals: filterData.travelType },
+      });
+    }
+    if (filterData.destination) {
+      andConditions.push({
+        destination: { contains: filterData.destination, mode: "insensitive" },
+      });
+    }
+
+    if (filterData.startDate) {
+      andConditions.push({
+        startDate: { equals: filterData.startDate },
+      });
+    }
+
+    if (filterData.endDate) {
+      andConditions.push({
+        endDate: { equals: filterData.endDate },
+      });
+    }
+    if (andConditions.length > 0) {
+      whereConditions.AND.push(...andConditions);
+    }
   }
-
-
-  const whereConditon: Prisma.TripWhereInput = { AND: andCondition };
 
   const result = await prisma.trip.findMany({
-    where: whereConditon,
+    where: whereConditions,
     skip,
     take: limit,
     orderBy:
@@ -76,7 +90,7 @@ const  getAllTripsFormDB = async (
   });
 
   const total = await prisma.trip.count({
-    where: whereConditon,
+    where: whereConditions,
   });
 
   return {
@@ -90,64 +104,75 @@ const  getAllTripsFormDB = async (
 };
 
 
-
-const sendTripTravelBuddy = async (
-  tripId: string,
-  userId: string
-): Promise<TravelBuddyRequest> => {
-  const request = await prisma.travelBuddyRequest.create({
-    data: {
-      tripId,
-      userId,
-      status: "PENDING",
-    },
+const getSingleTripeDB = async (id: string) => {
+  const whereCondition: any = {
+    id,
+    status: true,
+  };
+  const result = await prisma.trip.findUnique({
+    where: whereCondition,
   });
-
-  return request;
+  return result;
 };
 
-const getPotentialTravel = async (
-  tripId: string
-): Promise<TravelBuddyRequest[]> => {
-  const potentialBuddies = await prisma.travelBuddyRequest.findMany({
-    where: {
-      tripId,
-    },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-    },
+const UpdateTripeDB = async (id: string, data: any) => {
+  console.log(id, "id");
+  const result = await prisma.trip.update({
+    where: { id },
+    data: data,
   });
-
-  return potentialBuddies;
+  return result;
 };
 
-const respondTripToTravelBuddy = async (
-  buddyId: string,
-  status: string
-): Promise<TravelBuddyRequest | null> => {
-  const updatedRequest = await prisma.travelBuddyRequest.update({
-    where: {
-      id: buddyId,
-    },
-    data: {
-      status,
-      updatedAt: new Date(),
-    },
-  });
+const DeleteTripeDB = async (id: string) => {
+  console.log(id, "id");
 
-  return updatedRequest;
+  const data: any = {
+    status: false,
+  };
+  const result = await prisma.trip.update({
+    where: { id },
+    data: data,
+  });
+  return result;
 };
 
-export const tripServices = {
-  createTrip,
-  getAllTripsFormDB,
-  sendTripTravelBuddy,
-  getPotentialTravel,
-  respondTripToTravelBuddy,
+
+const getPostedTripeDB = async (id: string) => {
+  const whereCondition: any = {
+    userId: id,
+    status: true,
+  };
+  try {
+    const result = await prisma.trip.findMany({
+      where: whereCondition,
+    });
+    return result;
+  } catch (error) {
+    return error;
+  }
+};
+
+const getAllTripeForAdminDB = async () => {
+  const whereCondition: any = {
+    status: true,
+  };
+  try {
+    const result = await prisma.trip.findMany({
+      where: whereCondition,
+    });
+    return result;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const TripServices = {
+  CreateTripeDB,
+  GetTripsDB,
+  getSingleTripeDB,
+  getPostedTripeDB,
+  UpdateTripeDB,
+  DeleteTripeDB,
+  getAllTripeForAdminDB,
 };

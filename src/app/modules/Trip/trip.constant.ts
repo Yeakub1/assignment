@@ -1,17 +1,10 @@
-export const tripFilterAbleFields = [
-  "destination",
-  "startDate",
-  "endDate",
-  "minBudget",
-  "maxBudget",
-  "searchTerm",
-];
+export const userSearchAbleFields: string[] = ["destination", "budget"]; 
 
-export const tripSearchAbleFields = [
+export const userFilterableFields: string[] = [
   "destination",
   "startDate",
   "endDate",
   "minBudget",
   "maxBudget",
-  "searchTerm",
+  "travelType",
 ];
