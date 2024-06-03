@@ -125,8 +125,6 @@ const UpdateTripeDB = async (id: string, data: any) => {
 };
 
 const DeleteTripeDB = async (id: string) => {
-  console.log(id, "id");
-
   const data: any = {
     status: false,
   };

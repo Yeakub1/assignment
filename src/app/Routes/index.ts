@@ -15,7 +15,7 @@ const moduleRoutes = [
     route: AuthRoutes,
   },
   {
-    path: "/",
+    path: "/users",
     route: UsersRoutes,
   },
   {
@@ -23,7 +23,7 @@ const moduleRoutes = [
     route: TripsRoutes,
   },
   {
-    path: "/users",
+    path: "/",
     route: UserProfileRoutes,
   },
   {

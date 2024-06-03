@@ -20,7 +20,6 @@ const loginUserDB = async (payload: any) => {
   });
 
   if (!userData) {
-    console.log("nei");
     throw new Error(" Unauthorized Access!");
   }
   const { userStatus, password } = userData;
