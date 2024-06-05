@@ -1,7 +1,7 @@
-# Travel Buddy App
+# Travel Buddy Server 
 
 ## Live URL
-**https://serve-site.vercel.app/**
+**https://server-site-apps.vercel.app**
 
 ## Features
 
